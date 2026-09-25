@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Namoz kalendari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Variant 3 — "Prayer tracker": pastel, oylik kalendar to'ri + kun paneli */
+  :root{
+    --bg:#fbf6f0;
+    --surface:#ffffff;
+    --surface-2:#f5efe7;
+    --border:#efe6da;
+    --text:#2a2438;
+    --muted:#8a8398;
+    --accent:#7c6cf0;
+    --accent-bg:#efecff;
+    --ok:#2f9e6e;   --ok-bg:#dff5ea;
+    --jam:#7c6cf0;  --jam-bg:#ebe8ff;
+    --late:#d98a1c; --late-bg:#fdf0da;
+    --miss:#e0566a; --miss-bg:#fde4e7;
+    --shadow:0 8px 28px rgba(80,60,120,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15131c; --surface:#1e1b28; --surface-2:#272433; --border:#322e40;
+      --text:#f1eef8; --muted:#a29db3; --accent:#a99dff; --accent-bg:#2b2645;
+      --ok:#5fd3a0;   --ok-bg:#1a3a2e;
+      --jam:#a99dff;  --jam-bg:#2d2750;
+      --late:#f2b45a; --late-bg:#3d2f18;
+      --miss:#f28a98; --miss-bg:#40202a;
+      --shadow:0 8px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15131c; --surface:#1e1b28; --surface-2:#272433; --border:#322e40;
+    --text:#f1eef8; --muted:#a29db3; --accent:#a99dff; --accent-bg:#2b2645;
+    --ok:#5fd3a0;   --ok-bg:#1a3a2e;
+    --jam:#a99dff;  --jam-bg:#2d2750;
+    --late:#f2b45a; --late-bg:#3d2f18;
+    --miss:#f28a98; --miss-bg:#40202a;
+    --shadow:0 8px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.45;
+  }
+  button{font:inherit;color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px 48px}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .top h1{margin:0;font-size:24px;font-weight:900;letter-spacing:-.02em}
+  .top p{margin:0;font-size:13px;color:var(--muted);font-weight:600}
+  .tools{display:flex;gap:8px}
+  .pill-btn{
+    height:40px;min-width:40px;padding:0 14px;border-radius:99px;cursor:pointer;
+    background:var(--surface);border:1px solid var(--border);font-size:13px;font-weight:700;
+  }
+  .pill-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .pill-btn.armed{background:var(--miss-bg);color:var(--miss);border-color:var(--miss)}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow)}
+
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+  .side{position:sticky;top:16px;display:flex;flex-direction:column;gap:18px}
+
+  /* ---------- kalendar ---------- */
+  .cal{padding:18px}
+  .cal-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .cal-head .label{flex:1}
+  .cal-head .label b{font-size:22px;font-weight:900;letter-spacing:-.01em}
+  .cal-head .label span{font-size:22px;font-weight:600;color:var(--muted);margin-left:6px}
+  .round{
+    width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);
+    cursor:pointer;font-size:18px;line-height:1;
+  }
+  .round:hover{background:var(--accent-bg);color:var(--accent);border-color:transparent}
+  .today-link{
+    border:none;background:var(--accent-bg);color:var(--accent);border-radius:99px;height:40px;padding:0 14px;
+    cursor:pointer;font-weight:800;font-size:13px;
+  }
+
+  .wd,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .wd{margin-bottom:8px}
+  .wd span{text-align:center;font-size:12px;font-weight:800;color:var(--muted)}
+  .wd span.fri{color:var(--accent)}
+
+  .cday{
+    aspect-ratio:1/1.05;border-radius:18px;border:1.5px solid transparent;background:var(--surface-2);
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:4px;
+    transition:transform .08s ease, border-color .15s ease, background .15s ease;
+  }
+  .cday:hover{border-color:var(--accent)}
+  .cday:active{transform:scale(.95)}
+  .cday .n{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .cday .dots{display:flex;gap:3px}
+  .cday .dots i{width:6px;height:6px;border-radius:50%;background:var(--border)}
+  .cday .dots i[data-s="+"]{background:var(--ok)}
+  .cday .dots i[data-s="J"]{background:var(--jam)}
+  .cday .dots i[data-s="q"]{background:var(--late)}
+  .cday .dots i[data-s="-"]{background:var(--miss)}
+  .cday.full{background:var(--ok-bg)}
+  .cday.today .n{color:var(--accent)}
+  .cday.today{border-color:var(--accent);border-style:dashed}
+  .cday.sel{background:var(--accent);border-color:var(--accent);border-style:solid;color:#fff}
+  .cday.sel .n{color:#fff}
+  .cday.sel .dots i{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+  .cday.future{opacity:.45}
+  .blank{visibility:hidden}
+
+  /* ---------- xulosa ---------- */
+  .summary{padding:18px;display:flex;align-items:center;gap:18px}
+  .donut{
+    width:120px;height:120px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:var(--surface-2);
+  }
+  .donut > div{
+    width:88px;height:88px;border-radius:50%;background:var(--surface);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .donut b{font-size:24px;font-weight:900;line-height:1}
+  .donut small{font-size:11px;color:var(--muted);font-weight:700}
+  .counts{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .counts div{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+  .counts div span{flex:1;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .counts b{font-variant-numeric:tabular-nums}
+  .chip{width:22px;height:22px;border-radius:8px;display:inline-grid;place-items:center;font-weight:900;font-size:12px;font-style:normal;flex:none}
+  .chip.J{background:var(--jam-bg);color:var(--jam)}
+  .chip.plus{background:var(--ok-bg);color:var(--ok)}
+  .chip.q{background:var(--late-bg);color:var(--late)}
+  .chip.minus{background:var(--miss-bg);color:var(--miss)}
+  .chip.none{background:var(--surface-2);color:var(--muted)}
+
+  /* ---------- kun paneli ---------- */
+  .detail{padding:18px}
+  .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .detail-head h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-.01em}
+  .detail-head p{margin:0;font-size:13px;color:var(--muted);font-weight:700}
+  .score{
+    background:var(--accent-bg);color:var(--accent);border-radius:99px;padding:6px 12px;
+    font-weight:900;font-size:14px;white-space:nowrap;
+  }
+  .plist{display:flex;flex-direction:column;gap:8px}
+  .cell{
+    appearance:none;width:100%;cursor:pointer;text-align:left;
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;
+    background:var(--surface-2);border:1.5px solid transparent;
+    transition:transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  .cell:hover{border-color:var(--accent)}
+  .cell:active{transform:scale(.98)}
+  .cell .ico{
+    width:40px;height:40px;border-radius:14px;display:grid;place-items:center;flex:none;
+    background:var(--surface);font-size:18px;
+  }
+  .cell .txt{flex:1;min-width:0}
+  .cell .pname{display:block;font-weight:800;font-size:15px}
+  .cell .ptime{display:block;font-size:12px;color:var(--muted);font-weight:700}
+  .cell .mark{
+    width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;
+    font-size:18px;font-weight:900;background:var(--surface);color:var(--muted);
+  }
+  .cell[data-state="+"]{background:var(--ok-bg)}
+  .cell[data-state="+"] .mark{background:var(--ok);color:#fff}
+  .cell[data-state="+"] .ptime{color:var(--ok)}
+  .cell[data-state="J"]{background:var(--jam-bg)}
+  .cell[data-state="J"] .mark{background:var(--jam);color:#fff}
+  .cell[data-state="J"] .ptime{color:var(--jam)}
+  .cell[data-state="q"]{background:var(--late-bg)}
+  .cell[data-state="q"] .mark{background:var(--late);color:#fff}
+  .cell[data-state="q"] .ptime{color:var(--late)}
+  .cell[data-state="-"]{background:var(--miss-bg)}
+  .cell[data-state="-"] .mark{background:var(--miss);color:#fff}
+  .cell[data-state="-"] .ptime{color:var(--miss)}
+  .hint{margin:14px 0 0;font-size:12px;color:var(--muted);text-align:center;font-weight:600}
+
+  @media (max-width:880px){
+    .layout{grid-template-columns:1fr}
+    .side{position:static}
+  }
+  @media (max-width:560px){
+    .top h1{font-size:21px}
+    .top p{display:none}
+    .cal{padding:14px}
+    .wd,.grid{gap:5px}
+    .cday{border-radius:13px;gap:4px}
+    .cday .n{font-size:14px}
+    .cday .dots{gap:2px}
+    .cday .dots i{width:4px;height:4px}
+    .cal-head .label b,.cal-head .label span{font-size:19px}
+    .summary{gap:14px;padding:16px}
+    .donut{width:104px;height:104px}
+    .donut > div{width:76px;height:76px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1>Namoz kalendari</h1>
+      <p>besh vaqt namoz kundaligi</p>
+    </div>
+    <div class="tools">
+      <button class="pill-btn" id="clearBtn">Oyni tozalash</button>
+      <button class="pill-btn" id="themeBtn" title="Mavzu">◐</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="card cal">
+      <div class="cal-head">
+        <div class="label"><b id="mName">—</b><span id="mYear"></span></div>
+        <button class="today-link" id="todayBtn">Bugun</button>
+        <button class="round" id="prevBtn" aria-label="Oldingi oy">‹</button>
+        <button class="round" id="nextBtn" aria-label="Keyingi oy">›</button>
+      </div>
+      <div class="wd">
+        <span>Du</span><span>Se</span><span>Ch</span><span>Pa</span><span class="fri">Ju</span><span>Sh</span><span>Ya</span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <aside class="side">
+      <section class="card detail" id="detail">
+        <div class="detail-head">
+          <div><h2 id="dTitle">—</h2><p id="dSub">—</p></div>
+          <span class="score" id="dScore">0/5</span>
+        </div>
+        <div class="plist" id="plist"></div>
+        <p class="hint">Bosing — belgi almashadi: · → + → J → q → − → ·</p>
+      </section>
+
+      <section class="card summary">
+        <div class="donut" id="donut"><div><b id="pct">0%</b><small>bajarildi</small></div></div>
+        <div class="counts">
+          <div><i class="chip J">J</i><span>Jamoat bilan</span><b id="cJ">0</b></div>
+          <div><i class="chip plus">+</i><span>O'qildi</span><b id="cP">0</b></div>
+          <div><i class="chip q">q</i><span>Kech / qazo</span><b id="cQ">0</b></div>
+          <div><i class="chip minus">−</i><span>O'qilmadi</span><b id="cM">0</b></div>
+          <div><i class="chip none">·</i><span>Belgilanmagan</span><b id="cN">0</b></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* Faqat UI — ma'lumot localStorage'da (index.html bilan bir xil kalit). */
+
+const PRAYERS = [
+  { key:'bomdod', name:'Bomdod', time:'Tong otganda',  ico:'🌅' },
+  { key:'peshin', name:'Peshin', time:'Tush payti',    ico:'☀️' },
+  { key:'asr',    name:'Asr',    time:'Ikkindi',       ico:'🌤️' },
+  { key:'shom',   name:'Shom',   time:'Kun botganda',  ico:'🌇' },
+  { key:'xufton', name:'Xufton', time:'Kechasi',       ico:'🌙' },
+];
+const CYCLE  = ['', '+', 'J', 'q', '-'];
+const LABEL  = { '':'belgilanmagan', '+':"o'qildi", 'J':"jamoat bilan o'qildi", 'q':"kech / qazo o'qildi", '-':"o'qilmadi" };
+const MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+const DOW    = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+
+const store = {
+  KEY: 'namoz:v1',
+  data: {},
+  load(){
+    try { this.data = JSON.parse(localStorage.getItem(this.KEY)) || {}; }
+    catch(e){ this.data = {}; }
+  },
+  save(){
+    try { localStorage.setItem(this.KEY, JSON.stringify(this.data)); } catch(e){}
+  },
+  get(day, prayer){ return (this.data[day] || {})[prayer] || ''; },
+  set(day, prayer, val){
+    if(!this.data[day]) this.data[day] = {};
+    if(val) this.data[day][prayer] = val; else delete this.data[day][prayer];
+    if(!Object.keys(this.data[day]).length) delete this.data[day];
+    this.save();
+  },
+  clearMonth(y, m){
+    const pre = y + '-' + String(m+1).padStart(2,'0') + '-';
+    Object.keys(this.data).forEach(k => { if(k.startsWith(pre)) delete this.data[k]; });
+    this.save();
+  }
+};
+
+const today = new Date();
+const todayKey = iso(today);
+let view = new Date(today.getFullYear(), today.getMonth(), 1);
+let selected = todayKey;
+
+function iso(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fromIso(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); }
+function pretty(d){
+  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+}
+const markOf = st => st === '-' ? '−' : (st || '·');
+const done   = st => st === '+' || st === 'J' || st === 'q';
+
+/* ---- render ---- */
+const $grid = document.getElementById('grid');
+
+function render(){
+  const y = view.getFullYear(), m = view.getMonth();
+  document.getElementById('mName').textContent = MONTHS[m];
+  document.getElementById('mYear').textContent = y;
+
+  const total = new Date(y, m+1, 0).getDate();
+  const lead  = (new Date(y, m, 1).getDay() + 6) % 7;   // dushanbadan boshlanadi
+  let html = '';
+  for(let i = 0; i < lead; i++) html += '<span class="blank"></span>';
+  for(let d = 1; d <= total; d++) html += dayHtml(new Date(y, m, d));
+  $grid.innerHTML = html;
+
+  renderDetail();
+  renderStats();
+}
+
+function dayHtml(date){
+  const key = iso(date);
+  const sts = PRAYERS.map(p => store.get(key, p.key));
+  const cls = ['cday',
+    key === todayKey ? 'today' : '',
+    key === selected ? 'sel' : '',
+    date > today ? 'future' : '',
+    sts.every(done) ? 'full' : ''
+  ].join(' ').replace(/\s+/g,' ').trim();
+  return '<button class="'+cls+'" data-key="'+key+'" aria-label="'+pretty(date)+'">'
+       +   '<span class="n">'+date.getDate()+'</span>'
+       +   '<span class="dots">'+sts.map(s => '<i data-s="'+s+'"></i>').join('')+'</span>'
+       + '</button>';
+}
+
+function refreshDay(key){
+  const el = $grid.querySelector('.cday[data-key="'+key+'"]');
+  if(el) el.outerHTML = dayHtml(fromIso(key));
+}
+
+function renderDetail(){
+  const date = fromIso(selected);
+  document.getElementById('dTitle').textContent = pretty(date);
+  document.getElementById('dSub').textContent = DOW[date.getDay()] + (selected === todayKey ? ' · bugun' : '');
+  const n = PRAYERS.filter(p => done(store.get(selected, p.key))).length;
+  document.getElementById('dScore').textContent = n + '/5';
+
+  document.getElementById('plist').innerHTML = PRAYERS.map(p => {
+    const st = store.get(selected, p.key);
+    return '<button class="cell" data-day="'+selected+'" data-prayer="'+p.key+'" data-state="'+st+'">'
+         +   '<span class="ico" aria-hidden="true">'+p.ico+'</span>'
+         +   '<span class="txt"><span class="pname">'+p.name+'</span><span class="ptime">'+(st ? LABEL[st] : p.time)+'</span></span>'
+         +   '<span class="mark">'+markOf(st)+'</span>'
+         + '</button>';
+  }).join('');
+}
+
+function renderStats(){
+  const y = view.getFullYear(), m = view.getMonth();
+  const total = new Date(y, m+1, 0).getDate();
+  const c = { 'J':0, '+':0, 'q':0, '-':0 };
+  for(let d = 1; d <= total; d++){
+    const rec = store.data[iso(new Date(y, m, d))] || {};
+    for(const p of PRAYERS){ const s = rec[p.key]; if(s in c) c[s]++; }
+  }
+  const all = total * PRAYERS.length;
+  const none = all - c['J'] - c['+'] - c['q'] - c['-'];
+  document.getElementById('cJ').textContent = c['J'];
+  document.getElementById('cP').textContent = c['+'];
+  document.getElementById('cQ').textContent = c['q'];
+  document.getElementById('cM').textContent = c['-'];
+  document.getElementById('cN').textContent = none;
+  document.getElementById('pct').textContent = Math.round((c['J']+c['+']+c['q'])/all*100) + '%';
+
+  // donut: J → + → q → − → qolgani
+  let a = 0; const seg = [];
+  [['J','var(--jam)'],['+','var(--ok)'],['q','var(--late)'],['-','var(--miss)']].forEach(([k,col]) => {
+    const b = a + c[k]/all*100;
+    if(b > a) seg.push(col+' '+a+'% '+b+'%');
+    a = b;
+  });
+  seg.push('var(--surface-2) '+a+'% 100%');
+  document.getElementById('donut').style.background = 'conic-gradient('+seg.join(',')+')';
+}
+
+/* ---- hodisalar ---- */
+$grid.addEventListener('click', e => {
+  const btn = e.target.closest('.cday');
+  if(!btn) return;
+  const prev = selected;
+  selected = btn.dataset.key;
+  refreshDay(prev); refreshDay(selected);
+  renderDetail();
+  if(window.matchMedia('(max-width:880px)').matches){
+    document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+});
+
+document.getElementById('plist').addEventListener('click', e => {
+  const btn = e.target.closest('.cell');
+  if(!btn) return;
+  const next = CYCLE[(CYCLE.indexOf(btn.dataset.state || '') + 1) % CYCLE.length];
+  store.set(btn.dataset.day, btn.dataset.prayer, next);
+  renderDetail();
+  refreshDay(btn.dataset.day);
+  renderStats();
+});
+
+function go(delta){
+  view.setMonth(view.getMonth() + delta);
+  const y = view.getFullYear(), m = view.getMonth();
+  selected = (y === today.getFullYear() && m === today.getMonth()) ? todayKey : iso(new Date(y, m, 1));
+  render();
+}
+document.getElementById('prevBtn').onclick = () => go(-1);
+document.getElementById('nextBtn').onclick = () => go(1);
+document.getElementById('todayBtn').onclick = () => {
+  view = new Date(today.getFullYear(), today.getMonth(), 1);
+  selected = todayKey; render();
+};
+
+const $clear = document.getElementById('clearBtn');
+let armed = false, armTimer = null;
+$clear.onclick = () => {
+  if(!armed){
+    armed = true; $clear.textContent = 'Aniqmi? Bosing'; $clear.classList.add('armed');
+    armTimer = setTimeout(() => { armed = false; $clear.textContent = 'Oyni tozalash'; $clear.classList.remove('armed'); }, 3000);
+    return;
+  }
+  clearTimeout(armTimer); armed = false; $clear.textContent = 'Oyni tozalash'; $clear.classList.remove('armed');
+  store.clearMonth(view.getFullYear(), view.getMonth());
+  render();
+};
+
+document.getElementById('themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (dark ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', next);
+};
+
+store.load();
+render();
+</script>
+</body>
+</html>

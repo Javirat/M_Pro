@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c4a3a">
+<title>Namoz kalendari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Variant 2 — "Muslim Lifestyle": zumrad + oltin, geometrik naqsh */
+  :root{
+    --bg:#f4f1ea;
+    --surface:#ffffff;
+    --surface-2:#f1ede3;
+    --border:#e6e0d2;
+    --text:#17231f;
+    --muted:#6f7a74;
+    --hero-1:#0f5b46;
+    --hero-2:#082f25;
+    --gold:#c9a04e;
+    --accent:#0f6b52;
+    --ok:#1b8a64;   --ok-bg:#e1f3ea;
+    --jam:#b07d1f;  --jam-bg:#f8eed6;
+    --late:#4f68a8; --late-bg:#e6ebf7;
+    --miss:#b23b3b; --miss-bg:#f9e3e1;
+    --shadow:0 6px 24px rgba(12,48,38,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b1411; --surface:#121e1a; --surface-2:#1a2823; --border:#25362f;
+      --text:#eef3ef; --muted:#93a39b;
+      --hero-1:#0d4a3a; --hero-2:#051a14; --gold:#e0bd6e; --accent:#4cc79a;
+      --ok:#4cc79a;   --ok-bg:#153328;
+      --jam:#e0bd6e;  --jam-bg:#3a2f15;
+      --late:#8ea5e6; --late-bg:#1c2540;
+      --miss:#ee8a84; --miss-bg:#3d1c1c;
+      --shadow:0 6px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1411; --surface:#121e1a; --surface-2:#1a2823; --border:#25362f;
+    --text:#eef3ef; --muted:#93a39b;
+    --hero-1:#0d4a3a; --hero-2:#051a14; --gold:#e0bd6e; --accent:#4cc79a;
+    --ok:#4cc79a;   --ok-bg:#153328;
+    --jam:#e0bd6e;  --jam-bg:#3a2f15;
+    --late:#8ea5e6; --late-bg:#1c2540;
+    --miss:#ee8a84; --miss-bg:#3d1c1c;
+    --shadow:0 6px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.45;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  }
+  button{font:inherit;color:inherit}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;overflow:hidden;color:#fff;
+    background:linear-gradient(160deg,var(--hero-1),var(--hero-2));
+    padding:calc(18px + env(safe-area-inset-top)) 16px 84px;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;opacity:.13;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Crect x='16' y='16' width='32' height='32'/%3E%3Crect x='16' y='16' width='32' height='32' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='8'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero::after{
+    content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(201,160,78,.35),transparent 70%);pointer-events:none;
+  }
+  .hero-in{position:relative;z-index:1;max-width:960px;margin:0 auto}
+  .brand-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .moon{
+    width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  }
+  .brand h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .brand small{display:block;font-size:12px;opacity:.7;font-weight:500}
+  .glass-btn{
+    height:38px;min-width:38px;padding:0 12px;border-radius:12px;cursor:pointer;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;
+  }
+  .glass-btn:hover{background:rgba(255,255,255,.2)}
+
+  .today-card{display:flex;align-items:center;gap:20px;margin-top:24px}
+  .ring{
+    --p:0;flex:none;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--gold) calc(var(--p)*1%),rgba(255,255,255,.14) 0);
+  }
+  .ring > div{
+    width:84px;height:84px;border-radius:50%;background:var(--hero-2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .ring b{font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+  .ring span{font-size:11px;opacity:.7}
+  .today-txt .ar{font-family:Amiri,serif;font-size:22px;color:var(--gold);line-height:1}
+  .today-txt h2{margin:6px 0 2px;font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .today-txt p{margin:0;font-size:13px;opacity:.75}
+
+  .today-pills{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:20px}
+  .today-pills .cell{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;
+    border-radius:14px;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .today-pills .cell:active{transform:scale(.95)}
+  .today-pills .pname{font-size:11px;opacity:.8}
+  .today-pills .mark{font-size:18px;font-weight:800;line-height:1}
+  .today-pills .cell[data-state=""] .mark{opacity:.4}
+  .today-pills .cell[data-state="+"]{background:rgba(76,199,154,.25);border-color:rgba(76,199,154,.55)}
+  .today-pills .cell[data-state="J"]{background:rgba(201,160,78,.3);border-color:var(--gold)}
+  .today-pills .cell[data-state="q"]{background:rgba(142,165,230,.25);border-color:rgba(142,165,230,.6)}
+  .today-pills .cell[data-state="-"]{background:rgba(238,138,132,.25);border-color:rgba(238,138,132,.6)}
+
+  /* ---------- sheet ---------- */
+  .sheet{
+    position:relative;z-index:2;max-width:960px;margin:-56px auto 0;
+    background:var(--bg);border-radius:28px 28px 0 0;padding:20px 16px 0;
+  }
+  .monthbar{
+    display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);
+    border-radius:18px;padding:8px;box-shadow:var(--shadow);margin-bottom:16px;
+  }
+  .monthbar .nav{
+    width:40px;height:40px;border-radius:12px;border:none;cursor:pointer;
+    background:var(--surface-2);font-size:18px;line-height:1;
+  }
+  .monthbar .nav:hover{background:var(--ok-bg);color:var(--accent)}
+  .monthbar .label{flex:1;text-align:center}
+  .monthbar .label b{display:block;font-size:17px;font-weight:800}
+  .monthbar .label small{font-size:12px;color:var(--muted)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .stat{
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:12px 14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .stat .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:800;flex:none}
+  .stat b{display:block;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat small{font-size:11px;color:var(--muted)}
+  .stat.j .ic{background:var(--jam-bg);color:var(--jam)}
+  .stat.ok .ic{background:var(--ok-bg);color:var(--ok)}
+  .stat.q .ic{background:var(--late-bg);color:var(--late)}
+  .stat.m .ic{background:var(--miss-bg);color:var(--miss)}
+
+  .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:flex;margin-bottom:14px}
+  .bar i{display:block;height:100%}
+  .bar .s-J{background:var(--jam)} .bar .s-plus{background:var(--ok)}
+  .bar .s-q{background:var(--late)} .bar .s-minus{background:var(--miss)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:99px;background:var(--surface);border:1px solid var(--border)}
+  .chip{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font-weight:800;font-size:11px;font-style:normal}
+  .chip.J{background:var(--jam-bg);color:var(--jam)}
+  .chip.plus{background:var(--ok-bg);color:var(--ok)}
+  .chip.q{background:var(--late-bg);color:var(--late)}
+  .chip.minus{background:var(--miss-bg);color:var(--miss)}
+  .chip.none{background:var(--surface-2);color:var(--muted)}
+
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}
+  .sec-title h3{margin:0;font-size:16px;font-weight:800}
+  .sec-title span{font-size:12px;color:var(--muted)}
+
+  /* ---------- day list ---------- */
+  .days{display:flex;flex-direction:column;gap:10px}
+  .day{
+    background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:12px;
+    display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;
+  }
+  .day.today{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset,var(--shadow)}
+  .day.future{opacity:.5}
+  .date{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .date .dnum{
+    width:48px;height:48px;border-radius:16px;display:grid;place-items:center;
+    background:var(--surface-2);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;
+  }
+  .day.today .dnum{background:linear-gradient(160deg,var(--hero-1),var(--hero-2));color:#fff}
+  .date .dow{font-size:11px;color:var(--muted);font-weight:600}
+  .day.juma .dow{color:var(--jam)}
+
+  .prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .prayers .cell{
+    appearance:none;border:none;background:none;cursor:pointer;padding:2px 0;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .prayers .mark{
+    width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    font-size:17px;font-weight:800;background:var(--surface-2);border:1.5px dashed var(--border);
+    transition:transform .08s ease, background .15s ease;
+  }
+  .prayers .cell:hover .mark{border-color:var(--accent)}
+  .prayers .cell:active .mark{transform:scale(.92)}
+  .prayers .pname{font-size:10px;color:var(--muted);font-weight:600}
+  .prayers .cell[data-state=""] .mark{color:var(--muted)}
+  .prayers .cell[data-state="+"] .mark{background:var(--ok-bg);color:var(--ok);border:1.5px solid var(--ok)}
+  .prayers .cell[data-state="J"] .mark{background:var(--jam-bg);color:var(--jam);border:1.5px solid var(--jam)}
+  .prayers .cell[data-state="q"] .mark{background:var(--late-bg);color:var(--late);border:1.5px solid var(--late)}
+  .prayers .cell[data-state="-"] .mark{background:var(--miss-bg);color:var(--miss);border:1.5px solid var(--miss)}
+
+  .hint{margin:18px 0 0;font-size:12px;color:var(--muted);text-align:center}
+
+  /* ---------- bottom dock ---------- */
+  .dock{
+    position:fixed;left:50%;transform:translateX(-50%);z-index:10;
+    bottom:calc(14px + env(safe-area-inset-bottom));
+    display:flex;gap:6px;padding:6px;border-radius:20px;
+    background:var(--surface);border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .dock button{
+    border:none;background:transparent;cursor:pointer;border-radius:14px;height:44px;padding:0 16px;
+    font-size:13px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .dock button:hover{background:var(--surface-2);color:var(--text)}
+  .dock .primary{background:linear-gradient(160deg,var(--hero-1),var(--hero-2));color:#fff}
+  .dock .primary:hover{color:#fff;opacity:.92;background:linear-gradient(160deg,var(--hero-1),var(--hero-2))}
+  .dock .danger.armed{background:var(--miss-bg);color:var(--miss)}
+
+  @media (min-width:760px){
+    .hero{padding-top:28px;padding-bottom:96px}
+    .today-card{margin-top:28px}
+    .today-pills{max-width:520px}
+    .sheet{padding:24px 24px 0}
+  }
+  @media (max-width:560px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .ring{width:92px;height:92px}
+    .ring > div{width:74px;height:74px}
+    .today-txt h2{font-size:19px}
+    .day{grid-template-columns:1fr;gap:10px}
+    .date{flex-direction:row;gap:10px}
+    .date .dnum{width:36px;height:36px;border-radius:12px;font-size:15px}
+    .prayers .mark{width:44px;height:44px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="moon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="#c9a04e"/></svg>
+        </div>
+        <div>
+          <h1>Namoz kalendari</h1>
+          <small>besh vaqt namoz kundaligi</small>
+        </div>
+      </div>
+      <button class="glass-btn" id="themeBtn" title="Mavzu">◐</button>
+    </div>
+
+    <div class="today-card">
+      <div class="ring" id="ring"><div><b id="ringNum">0/5</b><span>bugun</span></div></div>
+      <div class="today-txt">
+        <div class="ar">الصلاة</div>
+        <h2 id="todayDate">—</h2>
+        <p id="todayMsg">Bugungi namozlarni belgilang</p>
+      </div>
+    </div>
+
+    <div class="today-pills" id="todayPills"></div>
+  </div>
+</header>
+
+<main class="sheet">
+  <div class="monthbar">
+    <button class="nav" id="prevBtn" aria-label="Oldingi oy">‹</button>
+    <div class="label"><b id="monthLabel">—</b><small id="monthSub">—</small></div>
+    <button class="nav" id="nextBtn" aria-label="Keyingi oy">›</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat j"><span class="ic">J</span><div><b id="cJ">0</b><small>Jamoat</small></div></div>
+    <div class="stat ok"><span class="ic">+</span><div><b id="cP">0</b><small>O'qildi</small></div></div>
+    <div class="stat q"><span class="ic">q</span><div><b id="cQ">0</b><small>Qazo</small></div></div>
+    <div class="stat m"><span class="ic">−</span><div><b id="cM">0</b><small>O'qilmadi</small></div></div>
+  </div>
+
+  <div class="bar" id="bar"></div>
+
+  <div class="legend">
+    <span><i class="chip J">J</i> jamoat bilan o'qildi</span>
+    <span><i class="chip plus">+</i> o'qildi</span>
+    <span><i class="chip q">q</i> kech / qazo o'qildi</span>
+    <span><i class="chip minus">−</i> o'qilmadi</span>
+    <span><i class="chip none">·</i> belgilanmagan</span>
+  </div>
+
+  <div class="sec-title"><h3>Kunlar</h3><span>· → + → J → q → − → ·</span></div>
+  <div class="days" id="days"></div>
+
+  <p class="hint">Doirachani bosing — belgi almashadi</p>
+</main>
+
+<nav class="dock">
+  <button class="primary" id="todayBtn">Bugun</button>
+  <button class="danger" id="clearBtn">Oyni tozalash</button>
+</nav>
+
+<script>
+/* Faqat UI — ma'lumot localStorage'da (index.html bilan bir xil kalit). */
+
+const PRAYERS = [
+  { key:'bomdod', name:'Bomdod' },
+  { key:'peshin', name:'Peshin' },
+  { key:'asr',    name:'Asr'    },
+  { key:'shom',   name:'Shom'   },
+  { key:'xufton', name:'Xufton' },
+];
+const CYCLE  = ['', '+', 'J', 'q', '-'];
+const MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+const DOW    = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
+
+const store = {
+  KEY: 'namoz:v1',
+  data: {},
+  load(){
+    try { this.data = JSON.parse(localStorage.getItem(this.KEY)) || {}; }
+    catch(e){ this.data = {}; }
+  },
+  save(){
+    try { localStorage.setItem(this.KEY, JSON.stringify(this.data)); } catch(e){}
+  },
+  get(day, prayer){ return (this.data[day] || {})[prayer] || ''; },
+  set(day, prayer, val){
+    if(!this.data[day]) this.data[day] = {};
+    if(val) this.data[day][prayer] = val; else delete this.data[day][prayer];
+    if(!Object.keys(this.data[day]).length) delete this.data[day];
+    this.save();
+  },
+  clearMonth(y, m){
+    const pre = y + '-' + String(m+1).padStart(2,'0') + '-';
+    Object.keys(this.data).forEach(k => { if(k.startsWith(pre)) delete this.data[k]; });
+    this.save();
+  }
+};
+
+const today = new Date();
+const todayKey = iso(today);
+let view = new Date(today.getFullYear(), today.getMonth(), 1);
+
+function iso(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function pretty(d){
+  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+}
+const markOf = st => st === '-' ? '−' : (st || '·');
+const done   = st => st === '+' || st === 'J' || st === 'q';
+
+function cellHtml(key, p){
+  const st = store.get(key, p.key);
+  return '<button class="cell" data-day="'+key+'" data-prayer="'+p.key+'" data-state="'+st+'" title="'+p.name+'">'
+       +   '<span class="mark">'+markOf(st)+'</span>'
+       +   '<span class="pname">'+p.name+'</span>'
+       + '</button>';
+}
+
+/* ---- render ---- */
+const $days = document.getElementById('days');
+
+function render(){
+  const y = view.getFullYear(), m = view.getMonth();
+  const total = new Date(y, m+1, 0).getDate();
+  document.getElementById('monthLabel').textContent = MONTHS[m] + ' ' + y;
+  document.getElementById('monthSub').textContent = total + ' kun · ' + (total*5) + ' namoz';
+
+  let html = '';
+  for(let d = 1; d <= total; d++){
+    const date = new Date(y, m, d);
+    const key  = iso(date);
+    const dow  = date.getDay();
+    const cls  = ['day', key === todayKey ? 'today' : '', date > today ? 'future' : '', dow === 5 ? 'juma' : ''].join(' ').trim();
+    html += '<article class="'+cls+'">'
+          +   '<div class="date"><span class="dnum">'+d+'</span><span class="dow">'+DOW[dow]+'</span></div>'
+          +   '<div class="prayers">'+PRAYERS.map(p => cellHtml(key, p)).join('')+'</div>'
+          + '</article>';
+  }
+  $days.innerHTML = html;
+  renderStats();
+  renderHero();
+
+  const t = $days.querySelector('.day.today');
+  if(t && !render.scrolled){ t.scrollIntoView({block:'center'}); render.scrolled = true; }
+}
+
+function renderHero(){
+  document.getElementById('todayDate').textContent = DOW[today.getDay()] + ', ' + pretty(today);
+  document.getElementById('todayPills').innerHTML = PRAYERS.map(p => {
+    const st = store.get(todayKey, p.key);
+    return '<button class="cell" data-day="'+todayKey+'" data-prayer="'+p.key+'" data-state="'+st+'">'
+         +   '<span class="pname">'+p.name+'</span><span class="mark">'+markOf(st)+'</span>'
+         + '</button>';
+  }).join('');
+  const n = PRAYERS.filter(p => done(store.get(todayKey, p.key))).length;
+  document.getElementById('ring').style.setProperty('--p', n/5*100);
+  document.getElementById('ringNum').textContent = n + '/5';
+  document.getElementById('todayMsg').textContent =
+    n === 5 ? 'Barakalloh! Bugungi barcha namozlar o‘qildi' : (5-n) + ' ta namoz belgilanmagan yoki o‘qilmagan';
+}
+
+function renderStats(){
+  const y = view.getFullYear(), m = view.getMonth();
+  const total = new Date(y, m+1, 0).getDate();
+  const c = { 'J':0, '+':0, 'q':0, '-':0 };
+  for(let d = 1; d <= total; d++){
+    const rec = store.data[iso(new Date(y, m, d))] || {};
+    for(const p of PRAYERS){ const s = rec[p.key]; if(s in c) c[s]++; }
+  }
+  document.getElementById('cJ').textContent = c['J'];
+  document.getElementById('cP').textContent = c['+'];
+  document.getElementById('cQ').textContent = c['q'];
+  document.getElementById('cM').textContent = c['-'];
+  const all = total * PRAYERS.length;
+  document.getElementById('bar').innerHTML =
+      '<i class="s-J" style="width:'+(c['J']/all*100)+'%"></i>'
+    + '<i class="s-plus" style="width:'+(c['+']/all*100)+'%"></i>'
+    + '<i class="s-q" style="width:'+(c['q']/all*100)+'%"></i>'
+    + '<i class="s-minus" style="width:'+(c['-']/all*100)+'%"></i>';
+}
+
+/* ---- hodisalar ---- */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.cell');
+  if(!btn) return;
+  const day = btn.dataset.day, prayer = btn.dataset.prayer;
+  const next = CYCLE[(CYCLE.indexOf(btn.dataset.state || '') + 1) % CYCLE.length];
+  store.set(day, prayer, next);
+  document.querySelectorAll('.cell[data-day="'+day+'"][data-prayer="'+prayer+'"]').forEach(el => {
+    el.dataset.state = next;
+    el.querySelector('.mark').textContent = markOf(next);
+  });
+  renderStats();
+  if(day === todayKey) renderHero();
+});
+
+document.getElementById('prevBtn').onclick = () => { view.setMonth(view.getMonth()-1); render(); };
+document.getElementById('nextBtn').onclick = () => { view.setMonth(view.getMonth()+1); render(); };
+document.getElementById('todayBtn').onclick = () => {
+  view = new Date(today.getFullYear(), today.getMonth(), 1);
+  render.scrolled = false; render();
+};
+
+const $clear = document.getElementById('clearBtn');
+let armed = false, armTimer = null;
+$clear.onclick = () => {
+  if(!armed){
+    armed = true; $clear.textContent = 'Aniqmi? Bosing'; $clear.classList.add('armed');
+    armTimer = setTimeout(() => { armed = false; $clear.textContent = 'Oyni tozalash'; $clear.classList.remove('armed'); }, 3000);
+    return;
+  }
+  clearTimeout(armTimer); armed = false; $clear.textContent = 'Oyni tozalash'; $clear.classList.remove('armed');
+  store.clearMonth(view.getFullYear(), view.getMonth());
+  render();
+};
+
+document.getElementById('themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (dark ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', next);
+};
+
+store.load();
+render();
+</script>
+</body>
+</html>
