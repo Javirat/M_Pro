@@ -9,8 +9,8 @@ import (
 func main() {
 	r := gin.Default()
 
-	r.POST("/change", handlers.PostCh)
-	r.GET("/dates", handlers.GetHistory)
+	r.PUT("/change/:date/:prayer", handlers.ChangeCH)
+	r.GET("/dates/:date", handlers.GetHistory)
 
-	r.Run(":1712")
+	r.Run(":1902")
 }
